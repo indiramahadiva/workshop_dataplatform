@@ -33,3 +33,29 @@ df["price"] = pd.to_numeric(df["price"], errors="coerce")
 
 print(df.head(10))
 print(df.dtypes)
+
+## FLAG (Mark possible problems) ##
+
+# Flag 1: Missing currency
+df["currency_missing"] = df["currency"].isna()
+
+# Flag 2: Extremely high prices (High price products?)
+df["high_price"] = df["price"] > 10000
+
+# Flag 3: Costs 0 (free? or problem?)
+df["zero_price"] = df["price"] == 0
+
+# Extra flags
+df["price_missing"] = df["price"].isna()
+df["id_missing"] = df["id"].isna()
+df["name_missing"] = df["name"].isna()
+df["negative_price"] = df["price"] < 0
+
+print("=== FLAGGED PROBLEMS ===")
+print(f"Missing currency:  {df['currency_missing'].sum()}")
+print(f"Luxury price:      {df['high_price'].sum()}")
+print(f"Price = 0:         {df['zero_price'].sum()}")
+print(f"Missing price:     {df['price_missing'].sum()}")
+print(f"Negative price:    {df['negative_price'].sum()}")
+print(f"Missing ID:        {df['id_missing'].sum()}")
+print(f"Missing name:      {df['name_missing'].sum()}")
