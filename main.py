@@ -1,20 +1,28 @@
 import pandas as pd
 
-## EXTRACT — Read raw data ##
+## ========================================
+## EXTRACT — Read raw data
+## ========================================
+# From Lecture #7: dataframe = pd.read_csv("data.csv")
+# Our file uses semicolon (;) as separator
 
-# sep=";" — this file uses semicolons as delimiters instead of commas.
-# Without this, pandas would treat each entire row as one column.
-# df.info() shows you the data types and how many non-null values each column has.
 df = pd.read_csv("data.csv", sep=";")
-print(df)
-print(df.info())
 
-## TRANSFORM — Clean data ##
+print("Columns:", list(df.columns))
+print("Total rows:", len(df))
+
+
+## ========================================
+## TRANSFORM — Clean the data
+## ========================================
+# From Lecture #7 (String Structurizing):
+#   dirty_df["name"] = dirty_df["name"].astype("string")
+#   dirty_df["name"] = dirty_df["name"].str.strip()
+#   dirty_df["name"] = dirty_df["name"].str.title()
+# From Lecture #6: "Trim name, convert price to numbers, uppercase currency."
 
 # 1. Clean "name"
-df["name"] = df["name"].astype("string")  # convert column to string type
-df["name"] = df["name"].str.strip()  # remove spaces before/after
-df["name"] = df["name"].str.title()  # capitalize each word
+df["name"] = df["name"].astype("string").str.strip().str.title()
 
 # 2. Clean "id"
 df["id"] = df["id"].astype("string").str.strip()
@@ -27,24 +35,27 @@ df["created_at"] = df["created_at"].astype("string").str.strip()
 df["created_at"] = df["created_at"].str.replace("/", "-", regex=False)
 
 # 5. Convert "price" to number
-# We have values like "free" and "not_available" that would crash with astype(float)
-# pd.to_numeric with errors="coerce" turns invalid values -> NaN instead of crashing
 df["price"] = pd.to_numeric(df["price"], errors="coerce")
 
+print("\n=== AFTER TRANSFORM ===")
 print(df.head(10))
-print(df.dtypes)
 
-## FLAG — Mark possible problems (suspicious but could be valid)  ##
+
+## ========================================
+## FLAG — Mark possible problems
+## ========================================
+# From Lecture #7 (Flagging with Columns):
+#   missing_df["price_missing"] = missing_df["price"].isna()
 
 df["id_missing"] = df["id"].isna()
 df["name_missing"] = df["name"].isna()
 df["price_missing"] = df["price"].isna()
 df["currency_missing"] = df["currency"].isna()
-df["negative_price"] = df["price"] < 0  # -> REJECT
-df["high_price"] = df["price"] > 10000  # -> FLAG
-df["zero_price"] = df["price"] == 0  # -> FLAG
+df["negative_price"] = df["price"] < 0  # -> REJECT (impossible to fix)
+df["high_price"] = df["price"] > 10000  # -> FLAG (suspicious, could be luxury)
+df["zero_price"] = df["price"] == 0  # -> FLAG (free? or error?)
 
-print("=== FLAGGED PROBLEMS ===")
+print("\n=== FLAGGED PROBLEMS ===")
 print(f"Missing ID:        {df['id_missing'].sum()}")
 print(f"Missing name:      {df['name_missing'].sum()}")
 print(f"Missing price:     {df['price_missing'].sum()}")
@@ -53,31 +64,56 @@ print(f"Negative price:    {df['negative_price'].sum()}")
 print(f"High price:        {df['high_price'].sum()}")
 print(f"Price = 0:         {df['zero_price'].sum()}")
 
-## REJECT (Reject impossible values) ##
-df["reject_reason"] = ""
 
-# No identity — can't connect to database (Primary Key)
-df.loc[df["id_missing"], "reject_reason"] += "missing_id; "
+## ========================================
+## REJECT — Reject impossible values
+## ========================================
+# From Lecture #6 (Transform - Flag - Reject):
+#   - No identity (missing id) -> can't connect to Primary_Key
+#   - Unusable data (missing name)
+#   - Impossible values (negative price, price > 100k)
+# If something is impossible to process, without changing the value -> reject it"
 
-# No name — data is unusable
-df.loc[df["name_missing"], "reject_reason"] += "missing_name; "
+# Define all reject conditions in one place
+reject_condition = (
+    df["id"].isna() | df["name"].isna() | (df["price"] < 0) | (df["price"] > 100000)
+)
 
-# Negative price should be rejected,
-df.loc[df["negative_price"], "reject_reason"] += "negative_price; "
+# Separate into valid and rejected
+df_rejected = df[reject_condition].copy()
+df_clean = df[~reject_condition].copy()
 
-# Impossible price — clearly wrong data (not just high, but beyond any real product)
-df["impossible_price"] = df["price"] > 100000
-df.loc[df["impossible_price"], "reject_reason"] += "impossible_price; "
-
-# Mark which rows are rejected
-df["is_rejected"] = df["reject_reason"] != ""
-
-# Separate into clean and rejected DataFrames
-df_clean = df[~df["is_rejected"]].copy()
-df_rejected = df[df["is_rejected"]].copy()
+# Add rejection reasons
+df_rejected["reject_reason"] = ""
+df_rejected.loc[df_rejected["id"].isna(), "reject_reason"] += "missing_id; "
+df_rejected.loc[df_rejected["name"].isna(), "reject_reason"] += "missing_name; "
+df_rejected.loc[df_rejected["price"] < 0, "reject_reason"] += "negative_price; "
+df_rejected.loc[df_rejected["price"] > 100000, "reject_reason"] += "impossible_price; "
 
 print(f"\nClean products: {len(df_clean)}")
 print(f"Rejected:       {len(df_rejected)}")
 print(df_rejected[["id", "name", "price", "reject_reason"]])
 
-## LOAD — Generate output CSV files ##
+## ========================================
+## LOAD — Generate output CSV files
+## ========================================
+# From Lecture #7: summary.to_csv("output.csv", index=False)
+# Utility Methods: .mean(), .median(), .max(), .min()
+
+df_with_price = df_clean[df_clean["price"].notna()]
+
+# --- analytics_summary.csv ---
+summary = pd.DataFrame(
+    [
+        {
+            "average_price": round(df_with_price["price"].mean(), 2),
+            "median_price": round(df_with_price["price"].median(), 2),
+            "total_products": len(df_clean),
+            "products_missing_price": int(df_clean["price_missing"].sum()),
+        }
+    ]
+)
+
+summary.to_csv("analytics_summary.csv", index=False)
+print("\nanalytics_summary.csv saved!")
+print(summary)
