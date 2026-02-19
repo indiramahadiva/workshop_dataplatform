@@ -1,0 +1,7 @@
+id,name,price,currency,reject_reason
+,Jacket,-200.0,SEK,missing_id; negative_price; 
+SKU-1005,,,,missing_name; 
+,Hat,,SEK,missing_id; 
+SKU-1015,Hoodie,-50.0,SEK,negative_price; 
+SKU-1039,Coat,999999.0,SEK,impossible_price; 
+SKU-1054,,450.0,SEK,missing_name; 

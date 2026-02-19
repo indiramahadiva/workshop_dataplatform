@@ -119,7 +119,7 @@ print("\nanalytics_summary.csv saved!")
 print(summary)
 
 # --- price_analysis.csv (BONUS) ---
-# Teacher: "deviant products come from what was FLAGGED"
+# Deviant products come from what was FLAGGED
 
 # Top 10 most expensive products
 top_10_expensive = df_with_price.nlargest(10, "price")[
@@ -140,3 +140,9 @@ price_analysis.to_csv("price_analysis.csv", index=False)
 
 print("\nprice_analysis.csv saved!")
 print(price_analysis)
+
+# --- rejected_products.csv (BONUS) ---
+df_rejected[["id", "name", "price", "currency", "reject_reason"]].to_csv(
+    "rejected_products.csv", index=False
+)
+print("\nrejected_products.csv saved!")
