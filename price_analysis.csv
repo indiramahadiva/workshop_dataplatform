@@ -1,0 +1,14 @@
+id,name,price,currency,category,high_price,zero_price
+SKU-1021,Ring,25000.0,SEK,most_expensive,,
+SKU-1020,Watch,15000.0,SEK,most_expensive,,
+SKU-1032,Suit,5000.0,SEK,most_expensive,,
+SKU-1040,Parka,4500.0,SEK,most_expensive,,
+SKU-1027,Winter Jacket,3500.0,SEK,most_expensive,,
+SKU-1016,Coat,2500.0,SEK,most_expensive,,
+SKU-1034,Blazer,2200.0,SEK,most_expensive,,
+SKU-1010,Boots,1500.0,SEK,most_expensive,,
+SKU-1047,Heels,1500.0,SEK,most_expensive,,
+SKU-1018,Sneakers,1200.0,SEK,most_expensive,,
+SKU-1014,T-Shirt,0.0,SEK,most_deviant,False,True
+SKU-1020,Watch,15000.0,SEK,most_deviant,True,False
+SKU-1021,Ring,25000.0,SEK,most_deviant,True,False

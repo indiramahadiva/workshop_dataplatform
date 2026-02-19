@@ -117,3 +117,26 @@ summary = pd.DataFrame(
 summary.to_csv("analytics_summary.csv", index=False)
 print("\nanalytics_summary.csv saved!")
 print(summary)
+
+# --- price_analysis.csv (BONUS) ---
+# Teacher: "deviant products come from what was FLAGGED"
+
+# Top 10 most expensive products
+top_10_expensive = df_with_price.nlargest(10, "price")[
+    ["id", "name", "price", "currency"]
+]
+
+# Deviant products — products that were flagged as suspicious
+deviant_products = df_with_price[
+    df_with_price["high_price"] | df_with_price["zero_price"]
+][["id", "name", "price", "currency", "high_price", "zero_price"]]
+
+# Combine both into one file
+top_10_expensive["category"] = "most_expensive"
+deviant_products["category"] = "most_deviant"
+
+price_analysis = pd.concat([top_10_expensive, deviant_products], ignore_index=True)
+price_analysis.to_csv("price_analysis.csv", index=False)
+
+print("\nprice_analysis.csv saved!")
+print(price_analysis)
